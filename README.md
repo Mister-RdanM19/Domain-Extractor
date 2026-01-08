@@ -47,4 +47,4 @@ Lisensi proyek ini mengikuti lisensi yang ada di repository. Jika belum ada, tam
 
 Kontak
 
-Dibuat oleh Mister-RdanM19. Demo online tersedia di: https://mister-rdanm19.github.io/Domain-Extractor/
+ramdan19id@gmail.com
