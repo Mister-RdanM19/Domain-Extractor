@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain & Subdomain Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #333;
+            margin-top: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            font-size: 16px;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: #4CAF50;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Domain & Subdomain Extractor</h1>
+
+        <!-- Form input file -->
+        <div class="form-group">
+            <label for="fileInput">Pilih File URL (txt, csv):</label>
+            <input type="file" id="fileInput" accept=".txt, .csv" />
+        </div>
+
+        <!-- Form input text area for manual URL entry -->
+        <div class="form-group">
+            <label for="urlInput">Masukkan URL (pisahkan dengan baris baru):</label>
+            <textarea id="urlInput" rows="10" cols="50" placeholder="Masukkan URL di sini..."></textarea>
+        </div>
+
+        <!-- Checkboxes for choosing extraction types -->
+        <div class="form-group">
+            <label><input type="checkbox" id="extractAllDomains"> Ekstrak Semua Domain (termasuk subdomain)</label>
+            <br>
+            <label><input type="checkbox" id="extractSubdomains"> Ekstrak Subdomain Saja</label>
+        </div>
+
+        <!-- Button to start extraction -->
+        <button onclick="extractDomains()">Ekstrak Domain</button>
+
+        <!-- Output domain list -->
+        <h2>Domain yang Telah Diekstrak</h2>
+        <textarea id="output" rows="10" cols="50" readonly></textarea>
+
+        <br><br>
+
+        <!-- Button to download extracted domains -->
+        <button onclick="downloadExtractedDomains()">Unduh Daftar Domain</button>
+    </div>
+
+    <script>
+        // Fungsi untuk mengekstrak domain dan subdomain dari URL
+        function extractDomains() {
+            const fileInput = document.getElementById('fileInput');
+            const urlInput = document.getElementById('urlInput');
+            const outputArea = document.getElementById('output');
+            const extractAllDomains = document.getElementById('extractAllDomains').checked;
+            const extractSubdomains = document.getElementById('extractSubdomains').checked;
+
+            let urlList = [];
+
+            // Jika file di-upload, baca file tersebut
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const fileContent = e.target.result;
+                    urlList = fileContent.split('\n').map(url => url.trim());
+                    processURLs(urlList);
+                };
+
+                reader.readAsText(file);
+            } else if (urlInput.value.trim()) {
+                // Jika URL dimasukkan manual
+                urlList = urlInput.value.split('\n').map(url => url.trim());
+                processURLs(urlList);
+            } else {
+                alert("Silakan masukkan URL atau pilih file untuk diekstrak.");
+            }
+
+            function processURLs(urlList) {
+                const allDomains = [];
+                const subdomains = [];
+
+                urlList.forEach(url => {
+                    try {
+                        // Memastikan URL valid
+                        const urlObj = new URL(url);
+                        const hostname = urlObj.hostname;
+                        
+                        if (extractAllDomains) {
+                            allDomains.push(hostname); // Masukkan semua domain (termasuk subdomain)
+                        }
+
+                        if (extractSubdomains && hostname.split('.').length > 2) {
+                            const subdomain = hostname.split('.').slice(0, -2).join('.'); // Ekstrak subdomain
+                            subdomains.push(subdomain);
+                        }
+                    } catch (error) {
+                        // Jika URL tidak valid
+                    }
+                });
+
+                // Gabungkan hasil dan tampilkan
+                let result = '';
+                if (extractAllDomains) {
+                    result += 'Semua Domain (termasuk subdomain):\n' + allDomains.join('\n') + '\n\n';
+                }
+                if (extractSubdomains) {
+                    result += 'Subdomain:\n' + subdomains.join('\n');
+                }
+
+                outputArea.value = result.trim();
+            }
+        }
+
+        // Fungsi untuk mengunduh daftar domain yang telah diekstrak
+        function downloadExtractedDomains() {
+            const outputArea = document.getElementById('output');
+            const domains = outputArea.value.trim();
+
+            if (!domains) {
+                alert('Tidak ada domain yang diekstrak untuk diunduh.');
+                return;
+            }
+
+            const blob = new Blob([domains], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'extracted_domains.txt';
+            link.click();
+        }
+    </script>
+</body>
+</html>
